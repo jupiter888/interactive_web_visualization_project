@@ -1,15 +1,30 @@
 library(shiny)
 library(dygraphs)
 library(httr)
-library(xml2)
+library(leaflet)
 library(shinythemes)
+library(ggplot2)
+library(data.table)
+library(DT)
+library(ggiraph)
 source("load_data.r")
-#project
-#loading locations \
+#Daniel Tracy 
+#last edit:18.01.2022 
+
+#WTF IS WRONG WITH THIS 
+#leafletOutput("map") : could not find function "leafletOutput"       <- wtf is this, maybe only source of errors in all code
+#project comments from professor:
+#1 the app cannot be run due to missing packages
+#2 there is one redundant item in the UI part
+#3 if no location is selected, there is R error shown on the screen - it would be good to prevent it and show a human readable text instead
+#4 locations on the map are not interactive - they do not reflect the selections
+
+
+#loading locations 
 locations = list(
-    list(name = "Sněžka", latitude = "50.7", longitude = "15.7"),
-    list(name = "Pálava", latitude = "48.8", longitude = "16.6"),
-    list(name = "Komorní hůrka", latitude = "50.1", longitude = "12.3")
+    list(name = "Snezka", latitude = "50.7", longitude = "15.7"),
+    list(name = "Palava", latitude = "48.8", longitude = "16.6"),
+    list(name = "Komorni hurka", latitude = "50.1", longitude = "12.3")
 )
 latitudes = c(50.7, 48.8, 50.1)
 longitudes = c(15.7, 16.6, 12.3)
@@ -23,12 +38,12 @@ ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish t
         selectInput("variable", "Variable:", levels(data$variable)),
         checkboxGroupInput("locations", "Locations:", levels(data$location), selected = "snezka"),
         girafeOutput("plot_girafe"),
-        ),
+        leafletOutput("map")),
     column(9,
         dygraphOutput("dygraphs_plot"),
         dataTableOutput("data_table1"),
-        verbatimTextOutput("current_temp"),
-        leafletOutput("map")
+        verbatimTextOutput("current_temp")
+        
         
     )
 )
@@ -67,9 +82,12 @@ server <- function(input, output) {
     output$data_table1=renderDT({
         data[location %in% input$locations & variable == input$variable]
     })
+    ?renderDT
     
     
 }
 
 #Create shiny app object
 shinyApp(ui = ui, server = server)
+
+
