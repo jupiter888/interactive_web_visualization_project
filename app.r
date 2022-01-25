@@ -18,7 +18,10 @@ latitudes = c(50.7, 48.8, 50.1)
 longitudes = c(15.7, 16.6, 12.3)
 location_labels = c("Snezka", "Palava", "Komorni Hurka")
 location_ids = c("snezka", "palava", "komorni_hurka")
-dt_all<-data.table(longitudes,latitudes,location_ids)
+dt_all<-c(longitudes,latitudes,location_ids)
+
+#browser() to debug
+#browser()
 ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish to see the theme and coloring( effective for difference in graph display. This box is able to be dragged anywhere on the app page for being able to see content)
                 titlePanel("Interactive Web Visualization Project"),
                 tags$head(tags$script(src = "get_forecast.js")),
@@ -67,9 +70,14 @@ server <- function(input, output) {
   })
   output$map <- renderLeaflet({
     leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles() %>%
-      addMarkers(lng=longitudes, lat=latitudes, label=location_labels,      
-                 options=markerOptions(draggable=TRUE, opacity=0.6),
-                 #take sel locations and selected lng's and lat's)
+      selected_checkbox_data<-dt_all$location_ids %in% input$locations
+      long_data<-dt_all$longitudes[selected_checkbox_data]
+      lat_data<-dt_all$latitudes[selected_checkbox_data]
+      label_data<-dt_all$location_ids[selected_checkbox_data]
+      addMarkers(lng=long_data, lat=lat_data, label=label_data,      
+                 options=markerOptions(draggable=TRUE, opacity=0.6)#######################################################
+                 )
+                 
   })
   output$plot_girafe <- renderGirafe({
     p=ggplot(data_to_plot(), aes(x=time, y=value, colour=location, tooltip=paste(location, value)))
@@ -79,7 +87,7 @@ server <- function(input, output) {
   output$data_table1=renderDT({
     data[location %in% input$locations & variable == input$variable]
   })
- 
+    
 }
 
 #Create shiny app object
