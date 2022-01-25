@@ -19,9 +19,8 @@ longitudes = c(15.7, 16.6, 12.3)
 location_labels = c("Snezka", "Palava", "Komorni Hurka")
 location_ids = c("snezka", "palava", "komorni_hurka")
 dt_all<-data.table(longitudes,latitudes,location_ids)
-#browser() to debug
 
-ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish to see the theme and coloring( effective for difference in graph display. This box is able to be dragged anywhere on the app page for being able to see content)
+ui <- fluidPage(shinythemes::themeSelector(), 
                 titlePanel("Interactive Web Visualization Project"),
                 tags$head(tags$script(src = "get_forecast.js")),
                 column(3, titlePanel("Project by: Daniel Tracy"),
@@ -67,19 +66,20 @@ server <- function(input, output) {
     dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector()
   })
   output$map <- renderLeaflet({
+    #create local vars for the data, and not using atomic vectors necessary for functionality
     selected_checkbox_data<-dt_all$location_ids %in% input$locations
     long_data<-dt_all$longitudes[selected_checkbox_data]
     lat_data<-dt_all$latitudes[selected_checkbox_data]
     label_data<-dt_all$location_ids[selected_checkbox_data]
     added<- sum(selected_checkbox_data)
-    #conditional for the markers to be added only if location input data is selected. 
+    #conditional for the markers to be added only if location input data is selected
     if(added==0){ 
         leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles()
       }
     else{
       leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles() %>%
       addMarkers(lng=long_data, lat=lat_data, label=label_data,      
-                 options=markerOptions(opacity=0.6)###########
+                 options=markerOptions(opacity=0.6)
                  )
     }
   })
