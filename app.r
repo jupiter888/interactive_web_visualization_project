@@ -18,16 +18,14 @@ latitudes = c(50.7, 48.8, 50.1)
 longitudes = c(15.7, 16.6, 12.3)
 location_labels = c("Snezka", "Palava", "Komorni Hurka")
 location_ids = c("snezka", "palava", "komorni_hurka")
-dt_all<-c(longitudes,latitudes,location_ids)
-
+dt_all<-data.table(longitudes,latitudes,location_ids)
 #browser() to debug
-#browser()
+
 ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish to see the theme and coloring( effective for difference in graph display. This box is able to be dragged anywhere on the app page for being able to see content)
                 titlePanel("Interactive Web Visualization Project"),
                 tags$head(tags$script(src = "get_forecast.js")),
                 column(3, titlePanel("Project by: Daniel Tracy"),
                        selectInput("variable", "Variable:", levels(data$variable)),
-                       #checkboxGroupInput removed to eliminate error. 25.01
                        checkboxGroupInput("locations", "Locations:", levels(data$location), selected = "snezka"),
                        girafeOutput("plot_girafe"),
                        ),
@@ -44,7 +42,7 @@ ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish t
 server <- function(input, output) {
   data_to_plot <- reactive({
     data[location %in% input$locations & variable == input$variable ]
-    # Make sure requirements are met <- this fixed the top error when no locatoin is selected 
+    # Make sure requirements are met <- this fixed the top error when no location is selected , however with data selected errors display
     req( data[location %in% input$locations & variable == input$variable ] )
   data_selection<-data[location %in% input$locations & variable == input$variable ]    
     if( nrow(data_selection)==0 ) 
@@ -69,15 +67,21 @@ server <- function(input, output) {
     dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector()
   })
   output$map <- renderLeaflet({
-    leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles() %>%
-      selected_checkbox_data<-dt_all$location_ids %in% input$locations
-      long_data<-dt_all$longitudes[selected_checkbox_data]
-      lat_data<-dt_all$latitudes[selected_checkbox_data]
-      label_data<-dt_all$location_ids[selected_checkbox_data]
+    selected_checkbox_data<-dt_all$location_ids %in% input$locations
+    long_data<-dt_all$longitudes[selected_checkbox_data]
+    lat_data<-dt_all$latitudes[selected_checkbox_data]
+    label_data<-dt_all$location_ids[selected_checkbox_data]
+    added<- sum(selected_checkbox_data)
+    #conditional for the markers to be added only if location input data is selected. 
+    if(added==0){ 
+        leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles()
+      }
+    else{
+      leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles() %>%
       addMarkers(lng=long_data, lat=lat_data, label=label_data,      
-                 options=markerOptions(draggable=TRUE, opacity=0.6)#######################################################
+                 options=markerOptions(opacity=0.6)###########
                  )
-                 
+    }
   })
   output$plot_girafe <- renderGirafe({
     p=ggplot(data_to_plot(), aes(x=time, y=value, colour=location, tooltip=paste(location, value)))
