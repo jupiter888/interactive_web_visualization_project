@@ -21,8 +21,8 @@ location_ids = c("snezka", "palava", "komorni_hurka")
 dt_all<-data.table(longitudes,latitudes,location_ids)
 
 ui <- fluidPage(shinythemes::themeSelector(), 
-                titlePanel("Interactive Web Visualization Project"),
-                tags$head(tags$script(src = "get_forecast.js")),
+                titlePanel("Interactive Web Visualization Project")
+                #removed redundant code from this line(meteorological javascript)
                 column(3, titlePanel("Project by: Daniel Tracy"),
                        selectInput("variable", "Variable:", levels(data$variable)),
                        checkboxGroupInput("locations", "Locations:", levels(data$location), selected = "snezka"),
@@ -35,8 +35,6 @@ ui <- fluidPage(shinythemes::themeSelector(),
                        dataTableOutput("data_table1")
                 )
 )
-#perhaps the need for req() is here, for handling the null selection, for the reactive expression not to fail. 
-#second solution being the primitive method of if (...) return(NULL), thus not rendering the errors to the screen  https://shiny.rstudio.com/articles/req.html
 
 server <- function(input, output) {
   data_to_plot <- reactive({
@@ -49,7 +47,7 @@ server <- function(input, output) {
     else
       req(data_selection)
     #req(input$locations)
-})
+  })
   output$current_temp <-renderText({
     text=""
     for (location in locations) {
@@ -66,7 +64,6 @@ server <- function(input, output) {
     dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector()
   })
   output$map <- renderLeaflet({
-    #create local vars for the data, and not using atomic vectors necessary for functionality
     selected_checkbox_data<-dt_all$location_ids %in% input$locations
     long_data<-dt_all$longitudes[selected_checkbox_data]
     lat_data<-dt_all$latitudes[selected_checkbox_data]
