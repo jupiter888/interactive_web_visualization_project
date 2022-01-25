@@ -8,16 +8,6 @@ library(data.table)
 library(DT)
 library(ggiraph)
 source("load_data.r")
-#Daniel Tracy 
-#last edit:18.01.2022 
-
-#WTF IS WRONG WITH THIS 
-#leafletOutput("map") : could not find function "leafletOutput"       <- wtf is this, maybe only source of errors in all code
-#project comments from professor:
-#1 the app cannot be run due to missing packages
-#2 there is one redundant item in the UI part
-#3 if no location is selected, there is R error shown on the screen - it would be good to prevent it and show a human readable text instead
-#4 locations on the map are not interactive - they do not reflect the selections
 
 
 #loading locations 
@@ -65,7 +55,7 @@ server <- function(input, output) {
         }
         return(text)
     })
-######################################this dygraph is not scaling to edges of page width
+
     output$dygraphs_plot <- renderDygraph({
         dygraph(dcast(data_to_plot(), "time ~ location + variable")) %>% dyRangeSelector()
     })
@@ -89,5 +79,6 @@ server <- function(input, output) {
 
 #Create shiny app object
 shinyApp(ui = ui, server = server)
+
 
 
