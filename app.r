@@ -19,10 +19,9 @@ longitudes = c(15.7, 16.6, 12.3)
 location_labels = c("Snezka", "Palava", "Komorni Hurka")
 location_ids = c("snezka", "palava", "komorni_hurka")
 dt_all<-data.table(longitudes,latitudes,location_ids)
-
-ui <- fluidPage(shinythemes::themeSelector(), 
-                titlePanel("Interactive Web Visualization Project")
-                #removed redundant code from this line(meteorological javascript)
+#browser() to debug
+ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish to see the theme and coloring( effective for difference in graph display. This box is able to be dragged anywhere on the app page for being able to see content)
+                titlePanel("Interactive Web Visualization Project"),
                 column(3, titlePanel("Project by: Daniel Tracy"),
                        selectInput("variable", "Variable:", levels(data$variable)),
                        checkboxGroupInput("locations", "Locations:", levels(data$location), selected = "snezka"),
@@ -35,18 +34,20 @@ ui <- fluidPage(shinythemes::themeSelector(),
                        dataTableOutput("data_table1")
                 )
 )
+#perhaps the need for req() is here, for handling the null selection, for the reactive expression not to fail. 
+#second solution being the primitive method of if (...) return(NULL), thus not rendering the errors to the screen  https://shiny.rstudio.com/articles/req.html
 
 server <- function(input, output) {
   data_to_plot <- reactive({
     data[location %in% input$locations & variable == input$variable ]
-    # Make sure requirements are met <- this fixed the top error when no location is selected , however with data selected errors display
+    # Make sure requirements are met <- this fixed the top error when no locatoin is selected 
     req( data[location %in% input$locations & variable == input$variable ] )
-  data_selection<-data[location %in% input$locations & variable == input$variable ]    
+  data_selection<-data[location %in% input$locations & variable == input$variable ]  
+  #conditional for errors not to display using the require data function
     if( nrow(data_selection)==0 ) 
       req(input$locations)
     else
       req(data_selection)
-    #req(input$locations)
   })
   output$current_temp <-renderText({
     text=""
@@ -69,7 +70,6 @@ server <- function(input, output) {
     lat_data<-dt_all$latitudes[selected_checkbox_data]
     label_data<-dt_all$location_ids[selected_checkbox_data]
     added<- sum(selected_checkbox_data)
-    #conditional for the markers to be added only if location input data is selected
     if(added==0){ 
         leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles()
       }
@@ -93,5 +93,4 @@ server <- function(input, output) {
 
 #Create shiny app object
 shinyApp(ui = ui, server = server)
-
 
