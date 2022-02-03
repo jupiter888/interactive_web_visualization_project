@@ -35,14 +35,11 @@ ui <- fluidPage(shinythemes::themeSelector(),
 )
 
 server <- function(input, output) {
-  data_to_plot <- reactive({#omitting redundancies the next 3 lines were commented out for removal
-   # #data[location %in% input$locations & variable == input$variable ]
-    # Make sure requirements are met <- this fixed the top error when no locatoin is selected 
-   # #req( data[location %in% input$locations & variable == input$variable ] )
+  data_to_plot <- reactive({
     data_selection<-data[location %in% input$locations & variable == input$variable ]  
     #conditional for errors not to display using the require data function
     if( nrow(data_selection)==0 ) 
-      req(FALSE) #this req was replaced by a FALSE, to keep code tidy. 
+      req(FALSE)
     else
       req(data_selection)
   })
