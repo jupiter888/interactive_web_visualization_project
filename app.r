@@ -2,7 +2,6 @@ library(shiny)
 library(dygraphs)
 library(httr)
 library(leaflet)
-library(shinythemes)
 library(ggplot2)
 library(data.table)
 library(DT)
@@ -19,14 +18,14 @@ longitudes = c(15.7, 16.6, 12.3)
 location_labels = c("Snezka", "Palava", "Komorni Hurka")
 location_ids = c("snezka", "palava", "komorni_hurka")
 dt_all<-data.table(longitudes,latitudes,location_ids)
-#browser() to debug
-ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish to see the theme and coloring( effective for difference in graph display. This box is able to be dragged anywhere on the app page for being able to see content)
+
+ui <- fluidPage(shinythemes::themeSelector(),  
                 titlePanel("Interactive Web Visualization Project"),
                 column(3, titlePanel("Project by: Daniel Tracy"),
                        selectInput("variable", "Variable:", levels(data$variable)),
                        checkboxGroupInput("locations", "Locations:", levels(data$location), selected = "snezka"),
                        girafeOutput("plot_girafe"),
-                       ),
+                ),
                 column(9,
                        dygraphOutput("dygraphs_plot"),
                        verbatimTextOutput("current_temp"),
@@ -34,18 +33,16 @@ ui <- fluidPage(shinythemes::themeSelector(),  #sets the page the way you wish t
                        dataTableOutput("data_table1")
                 )
 )
-#perhaps the need for req() is here, for handling the null selection, for the reactive expression not to fail. 
-#second solution being the primitive method of if (...) return(NULL), thus not rendering the errors to the screen  https://shiny.rstudio.com/articles/req.html
 
 server <- function(input, output) {
-  data_to_plot <- reactive({
-    data[location %in% input$locations & variable == input$variable ]
+  data_to_plot <- reactive({#omitting redundancies the next 3 lines were commented out for removal
+   # #data[location %in% input$locations & variable == input$variable ]
     # Make sure requirements are met <- this fixed the top error when no locatoin is selected 
-    req( data[location %in% input$locations & variable == input$variable ] )
-  data_selection<-data[location %in% input$locations & variable == input$variable ]  
-  #conditional for errors not to display using the require data function
+   # #req( data[location %in% input$locations & variable == input$variable ] )
+    data_selection<-data[location %in% input$locations & variable == input$variable ]  
+    #conditional for errors not to display using the require data function
     if( nrow(data_selection)==0 ) 
-      req(input$locations)
+      req(FALSE) #this req was replaced by a FALSE, to keep code tidy. 
     else
       req(data_selection)
   })
@@ -71,13 +68,13 @@ server <- function(input, output) {
     label_data<-dt_all$location_ids[selected_checkbox_data]
     added<- sum(selected_checkbox_data)
     if(added==0){ 
-        leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles()
-      }
+      leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles()
+    }
     else{
       leaflet() %>% setView(lng=15, lat=50, zoom=7) %>% addTiles() %>%
-      addMarkers(lng=long_data, lat=lat_data, label=label_data,      
-                 options=markerOptions(opacity=0.6)
-                 )
+        addMarkers(lng=long_data, lat=lat_data, label=label_data,      
+                   options=markerOptions(opacity=0.6)
+        )
     }
   })
   output$plot_girafe <- renderGirafe({
@@ -88,7 +85,7 @@ server <- function(input, output) {
   output$data_table1=renderDT({
     data[location %in% input$locations & variable == input$variable]
   })
-    
+  
 }
 
 #Create shiny app object
